@@ -7,6 +7,9 @@ REGISTRY ?= docker.pkg.github.com/axard/samplekube
 # Версия сборки из последнего тэга
 VERSION := $(shell git describe --tags --always --dirty)
 
+# Тэг для контейнеров
+TAG := $(shell git describe --tags --always --dirty)
+
 # Папки проекта с исходниками
 SRC_DIRS := cmd internal
 
