@@ -14,7 +14,7 @@ TAG := $(shell git describe --tags --always --dirty)
 SRC_DIRS := cmd internal
 
 # Платформы для которых производить сборку
-ALL_PLATFORMS := linux/amd64 windows/amd64
+ALL_PLATFORMS := linux/amd64
 
 # Операционная система и архитектура
 #   NOTE: получение с помощью утилиты go накладывает необходимость её наличия в системе
@@ -29,9 +29,6 @@ BUILD_IMAGE ?= golang:1.15.5-buster
 GOLANGCI_IMAGE ?= golangci/golangci-lint:v1.31.0
 
 BIN_EXTENSION :=
-ifeq ($(OS), windows)
-  BIN_EXTENSION := .exe
-endif
 
 all: # @HELP Сборка бинарей для одной платформы ($OS/$ARCH)
 all: build
@@ -177,6 +174,8 @@ push: $(CONTAINER_DOTFILES)
 	    docker push $(REGISTRY)/$$bin:$(TAG);  \
 	done
 
+# NOTE: Не работает т.к. нет в системе команд "gcloud" и "manifest-tool"
+#       а ещё кажется с Github работать не будет
 manifest-list: # @HELP создаёт манифест списка контейнеров для всех платформ
 manifest-list: all-push
 	@for bin in $(BINS); do                                   \
@@ -187,7 +186,8 @@ manifest-list: all-push
 	        push from-args                                    \
 	        --platforms "$$platforms"                         \
 	        --template $(REGISTRY)/$$bin:$(VERSION)__OS_ARCH  \
-	        --target $(REGISTRY)/$$bin:$(VERSION)
+	        --target $(REGISTRY)/$$bin:$(VERSION);            \
+	done
 
 version: # @HELP Выводит версию ПО
 version:
