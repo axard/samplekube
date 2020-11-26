@@ -1,7 +1,12 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/axard/samplekube/internal/cfg"
@@ -13,6 +18,8 @@ import (
 
 const (
 	defaultReadyDelay = 50 * time.Millisecond
+
+	numberOfSignals = 2
 )
 
 func main() {
@@ -21,16 +28,39 @@ func main() {
 		zap.String("verions", version.Version),
 	)
 
+	server := http.Server{
+		Addr:    cfg.Address(),
+		Handler: router.New(),
+	}
+
 	go func() {
 		<-time.After(defaultReadyDelay)
 		cfg.SetReady(true)
 	}()
 
-	err := http.ListenAndServe(cfg.Address(), router.New())
+	go func() {
+		interrupt := make(chan os.Signal, numberOfSignals)
+		signal.Notify(interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+		<-interrupt
+
+		if err := server.Shutdown(context.Background()); err != nil {
+			log.Logger.Error(
+				"Server shutdown failed",
+				zap.String("error", err.Error()),
+			)
+		}
+	}()
+
+	err := server.ListenAndServe()
 	if err != nil {
-		log.Logger.Fatal(
-			"Server failed",
-			zap.String("error", err.Error()),
-		)
+		if errors.Is(err, http.ErrServerClosed) {
+			log.Logger.Info("server closed")
+		} else {
+			log.Logger.Fatal(
+				"Server start failed",
+				zap.String("error", err.Error()),
+			)
+		}
 	}
 }
