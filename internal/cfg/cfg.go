@@ -3,6 +3,7 @@ package cfg
 import (
 	"os"
 	"sync"
+	"sync/atomic"
 
 	"github.com/axard/samplekube/internal/log"
 	"go.uber.org/zap"
@@ -15,6 +16,8 @@ type setting struct {
 
 var (
 	port setting
+
+	readyFlag uint32
 )
 
 const (
@@ -41,4 +44,22 @@ func Port() string {
 
 func Address() string {
 	return ":" + Port()
+}
+
+func SetReady(status bool) {
+	if status {
+		atomic.StoreUint32(&readyFlag, 1)
+	} else {
+		atomic.StoreUint32(&readyFlag, 0)
+	}
+}
+
+func Ready() bool {
+	value := atomic.LoadUint32(&readyFlag)
+
+	if value == 1 {
+		return true
+	} else {
+		return false
+	}
 }
