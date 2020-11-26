@@ -1,8 +1,8 @@
 # Названия бинарей
-BINS = server
+BINS = samplekube
 
 # URL реестра докерных образов
-REGISTRY ?= docker.pkg.github.com/axard/samplekube
+REGISTRY = docker.io/axard
 
 # Версия сборки из последнего тэга
 VERSION := $(shell git describe --tags --always --dirty)
@@ -233,6 +233,7 @@ $(BUILD_DIRS):
 
 clean: # @HELP Удаляет собранные контейнеры и временные файлы
 clean: container-clean bin-clean
+	rm -rf tmp.yaml
 
 container-clean:
 	rm -rf .container-* .dockerfile-*
