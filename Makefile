@@ -258,3 +258,13 @@ help:
 	        BEGIN {FS = ": *# *@HELP"};           \
 	        { printf "  %-30s %s\n", $$1, $$2 };  \
 	    '
+
+minikube: # @HELP Разворачивает в кубере
+minikube: push
+	for t in $(shell find ./build/kubernetes -type f -name "*.yaml"); do \
+		cat $$t | \
+			sed -E "s/\{\{(\s*)\.Release(\s*)\}\}/$(VERSION)/g" | \
+			sed -E "s/\{\{(\s*)\.ServiceName(\s*)\}\}/$(BINS)/g"; \
+			echo ---; \
+	done > tmp.yaml
+	kubectl apply -f tmp.yaml

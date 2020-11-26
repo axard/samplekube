@@ -21,3 +21,4 @@
 # Images and containers
 /.dockerfile-*
 /.container-*
+/tmp.yaml
